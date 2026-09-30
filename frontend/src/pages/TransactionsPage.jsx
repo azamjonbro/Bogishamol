@@ -6,14 +6,15 @@ import {
 } from '../utils';
 import {
   ArrowLeftRight, Filter, ChevronLeft, ChevronRight,
-  Eye, Calendar, Printer, X, CheckCircle2, Clock, User, Phone, FileText
+  Eye, Calendar, Printer, X, CheckCircle2, Clock, User, Phone, FileText,
+  Edit2, Trash2, Save
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { TableSkeleton } from '../components/ui/Skeleton';
 import Select from '../components/ui/Select';
 import DatePicker from '../components/ui/DatePicker';
 
-function TransactionDetailModal({ tx, onClose }) {
+function TransactionDetailModal({ tx, onClose, onEdit }) {
   if (!tx) return null;
 
   const isSale = tx.type === 'sale';
@@ -157,6 +158,18 @@ function TransactionDetailModal({ tx, onClose }) {
           </button>
           <button
             type="button"
+            onClick={() => {
+              const current = tx;
+              onClose();
+              onEdit?.(current);
+            }}
+            className="flex-1 py-2.5 rounded-xl border border-warning-500/30 bg-warning-500/10 text-warning-500 hover:bg-warning-500/20 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+          >
+            <Edit2 className="w-4 h-4" />
+            Tahrirlash
+          </button>
+          <button
+            type="button"
             onClick={onClose}
             className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs rounded-xl transition-colors shadow-sm"
           >
@@ -168,12 +181,241 @@ function TransactionDetailModal({ tx, onClose }) {
   );
 }
 
+function TransactionEditModal({ tx, onClose, onSaved, onDeleted }) {
+  if (!tx) return null;
+
+  const [date, setDate] = useState(
+    tx.date ? new Date(tx.date).toISOString().split('T')[0] : ''
+  );
+  const [customerName, setCustomerName] = useState(tx.customerName || tx.supplierName || '');
+  const [customerPhone, setCustomerPhone] = useState(tx.customerPhone || tx.supplierPhone || '');
+  const [paymentMethod, setPaymentMethod] = useState(tx.paymentMethod || 'cash');
+  const [paidAmount, setPaidAmount] = useState(tx.paidAmount ?? 0);
+  const [notes, setNotes] = useState(tx.notes || '');
+  const [dueDate, setDueDate] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isSale = tx.type === 'sale';
+  const isPurchase = tx.type === 'purchase';
+
+  const paymentOptions = [
+    { value: 'cash', label: 'Naqd pul' },
+    { value: 'card', label: 'Plastik karta' },
+    { value: 'transfer', label: "Bank o'tkazmasi" },
+    ...(isSale ? [{ value: 'credit', label: 'Nasiya' }] : []),
+  ];
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const payload = {
+        date,
+        paymentMethod,
+        paidAmount: Number(paidAmount),
+        notes: notes.trim(),
+        ...(isSale ? { customerName: customerName.trim(), customerPhone: customerPhone.trim() } : {}),
+        ...(isPurchase ? { supplierName: customerName.trim(), supplierPhone: customerPhone.trim() } : {}),
+        ...(paymentMethod === 'credit' && dueDate ? { dueDate } : {}),
+      };
+
+      await api.patch(`/transactions/${tx._id}`, payload);
+      toast.success('Tranzaksiya muvaffaqiyatli yangilandi');
+      onSaved();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Haqiqatan ham bu tranzaksiyani o'chirmoqchimisiz? Ombor qoldig'i avtomatik qaytariladi.")) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      await api.delete(`/transactions/${tx._id}`);
+      toast.success("Tranzaksiya o'chirildi va ombor qoldig'i tiklandi");
+      onDeleted();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="glass rounded-2xl p-6 w-full max-w-lg animate-scale-in text-surface-100 shadow-2xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between pb-4 border-b border-surface-700/60">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full uppercase bg-warning-500/10 text-warning-500 border border-warning-500/20">
+                Tahrirlash
+              </span>
+              <span className="text-xs text-surface-400 font-mono">
+                ID: {tx._id?.slice(-8)}
+              </span>
+            </div>
+            <h2 className="text-lg font-bold text-surface-100">Tranzaksiyani tahrirlash</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-surface-400 hover:text-surface-100 hover:bg-surface-800 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSave} className="space-y-4 pt-4">
+          {/* Sana */}
+          <div>
+            <label className="text-xs font-semibold text-surface-400 mb-1.5 block">Sana</label>
+            <DatePicker
+              value={date}
+              onChange={(val) => setDate(val)}
+              placeholder="Sanani tanlang"
+            />
+          </div>
+
+          {/* Mijoz / Yetkazib beruvchi */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-surface-400 mb-1.5 block">
+                {isPurchase ? 'Yetkazib beruvchi' : 'Mijoz ismi'}
+              </label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="F.I.SH."
+                className="w-full px-3.5 py-2.5 bg-surface-900 border border-surface-700 rounded-xl text-xs font-medium text-surface-100 placeholder-surface-500 focus:outline-none focus:border-primary-500"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-surface-400 mb-1.5 block">Telefon raqami</label>
+              <input
+                type="tel"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="+998 90 123 45 67"
+                className="w-full px-3.5 py-2.5 bg-surface-900 border border-surface-700 rounded-xl text-xs font-medium text-surface-100 placeholder-surface-500 focus:outline-none focus:border-primary-500"
+              />
+            </div>
+          </div>
+
+          {/* To'lov usuli */}
+          <div>
+            <label className="text-xs font-semibold text-surface-400 mb-1.5 block">To'lov usuli</label>
+            <Select
+              options={paymentOptions}
+              value={paymentMethod}
+              onChange={(val) => setPaymentMethod(val)}
+              searchable={false}
+            />
+          </div>
+
+          {/* To'langan summa */}
+          <div>
+            <label className="text-xs font-semibold text-surface-400 mb-1.5 block">
+              To'langan summa (Jami: {formatUZS(tx.totalAmount)} so'm)
+            </label>
+            <input
+              type="number"
+              value={paidAmount}
+              onChange={(e) => setPaidAmount(e.target.value)}
+              min="0"
+              max={tx.totalAmount}
+              step="any"
+              className="w-full px-3.5 py-2.5 bg-surface-900 border border-surface-700 rounded-xl text-xs font-semibold text-surface-100 focus:outline-none focus:border-primary-500"
+            />
+          </div>
+
+          {/* Nasiya to'lash muddati */}
+          {paymentMethod === 'credit' && (
+            <div>
+              <label className="text-xs font-semibold text-surface-400 mb-1.5 block">Nasiya to'lash muddati</label>
+              <DatePicker
+                value={dueDate}
+                onChange={(val) => setDueDate(val)}
+                placeholder="Muddatni tanlang"
+              />
+            </div>
+          )}
+
+          {/* Izoh */}
+          <div>
+            <label className="text-xs font-semibold text-surface-400 mb-1.5 block">Izoh</label>
+            <textarea
+              rows={2}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Qo'shimcha ma'lumot yoki izoh..."
+              className="w-full px-3.5 py-2.5 bg-surface-900 border border-surface-700 rounded-xl text-xs font-medium text-surface-100 placeholder-surface-500 focus:outline-none focus:border-primary-500 resize-none"
+            />
+          </div>
+
+          {/* Mahsulotlar (ma'lumot uchun) */}
+          <div className="p-3 rounded-xl bg-surface-900/60 border border-surface-700/60 text-xs">
+            <p className="font-semibold text-surface-400 mb-1.5">Tranzaksiya tarkibi:</p>
+            <div className="space-y-1">
+              {tx.items?.map((item, idx) => (
+                <div key={idx} className="flex justify-between text-surface-300">
+                  <span>{item.product?.name || item.productName || 'Mahsulot'} ({item.inputQuantity} {item.inputUnit})</span>
+                  <span className="font-mono text-surface-200">{formatUZS(item.lineTotal)} so'm</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-surface-700/60">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting || saving}
+              className="py-2.5 px-3.5 rounded-xl border border-danger-500/30 text-danger-500 hover:bg-danger-500/10 font-semibold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-40"
+            >
+              <Trash2 className="w-4 h-4" />
+              O'chirish
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="py-2.5 px-4 rounded-xl border border-surface-700 bg-surface-800 text-surface-300 hover:text-surface-100 font-semibold text-xs transition-colors"
+              >
+                Bekor qilish
+              </button>
+              <button
+                type="submit"
+                disabled={saving || deleting}
+                className="py-2.5 px-5 bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-sm disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, limit: 20, skip: 0 });
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ type: '', from: '', to: '' });
   const [selectedTx, setSelectedTx] = useState(null);
+  const [editingTx, setEditingTx] = useState(null);
   const [activeDatePreset, setActiveDatePreset] = useState('all');
 
   const fetchTransactions = useCallback(async () => {
@@ -415,17 +657,30 @@ export default function TransactionsPage() {
                     </td>
 
                     <td className="py-3 px-4 text-center">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedTx(tx);
-                        }}
-                        className="p-1.5 rounded-lg border border-surface-700 bg-surface-800 text-surface-400 group-hover:text-primary-500 group-hover:border-primary-500/40 transition-colors"
-                        title="Batafsil ko'rish"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTx(tx);
+                          }}
+                          className="p-1.5 rounded-lg border border-surface-700 bg-surface-800 text-surface-400 hover:text-primary-500 hover:border-primary-500/40 transition-colors"
+                          title="Batafsil ko'rish"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTx(tx);
+                          }}
+                          className="p-1.5 rounded-lg border border-surface-700 bg-surface-800 text-surface-400 hover:text-warning-500 hover:border-warning-500/40 transition-colors"
+                          title="Tahrirlash"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -470,6 +725,23 @@ export default function TransactionsPage() {
         <TransactionDetailModal
           tx={selectedTx}
           onClose={() => setSelectedTx(null)}
+          onEdit={(tx) => setEditingTx(tx)}
+        />
+      )}
+
+      {/* Transaction Edit Modal */}
+      {editingTx && (
+        <TransactionEditModal
+          tx={editingTx}
+          onClose={() => setEditingTx(null)}
+          onSaved={() => {
+            setEditingTx(null);
+            fetchTransactions();
+          }}
+          onDeleted={() => {
+            setEditingTx(null);
+            fetchTransactions();
+          }}
         />
       )}
     </div>
