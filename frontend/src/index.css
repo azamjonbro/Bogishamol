@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #ecfdf5;
+  --color-primary-100: #d1fae5;
+  --color-primary-200: #a7f3d0;
+  --color-primary-300: #6ee7b7;
+  --color-primary-400: #34d399;
+  --color-primary-500: #10b981;
+  --color-primary-600: #059669;
+  --color-primary-700: #047857;
+  --color-primary-800: #065f46;
+  --color-primary-900: #064e3b;
+  --color-primary-950: #022c22;
+
+  --color-accent-400: #38bdf8;
+  --color-accent-500: #0ea5e9;
+  --color-accent-600: #0284c7;
+
+  --color-success-400: #34d399;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+
+  --color-danger-400: #fb7185;
+  --color-danger-500: #f43f5e;
+  --color-danger-600: #e11d48;
+
+  --color-surface-50: var(--surface-50);
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+  --color-surface-300: var(--surface-300);
+  --color-surface-400: var(--surface-400);
+  --color-surface-500: var(--surface-500);
+  --color-surface-600: var(--surface-600);
+  --color-surface-700: var(--surface-700);
+  --color-surface-800: var(--surface-800);
+  --color-surface-900: var(--surface-900);
+  --color-surface-950: var(--surface-950);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  /* LIGHT MODE (Clean, comfortable, high-contrast, modern ERP) */
+  --surface-950: #f4f6f9; /* App background canvas */
+  --surface-900: #ffffff; /* Card / Surface background */
+  --surface-800: #e9eef4; /* Inner container / input fill */
+  --surface-700: #d8e1ea; /* Clean border line */
+  --surface-600: #b8c8d8; /* Hover border line */
+  --surface-500: #7b8f9f; /* Muted text / icons */
+  --surface-400: #526677; /* Secondary text */
+  --surface-300: #2a3b4c; /* Body text */
+  --surface-200: #182633; /* Strong text */
+  --surface-100: #0b1520; /* Headings */
+  --surface-50: #000000;
+
+  --glass-bg: #ffffff;
+  --glass-border: #d8e1ea;
+  --glass-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+
+  --glass-light-bg: #f8fafc;
+  --glass-light-border: #d8e1ea;
+}
+
+.dark {
+  /* DARK MODE (Comfortable Slate/Charcoal - deep, zero glare, relaxed eye strain) */
+  --surface-950: #0a0f18; /* App background canvas */
+  --surface-900: #121927; /* Card / Surface background */
+  --surface-800: #1a2336; /* Inner container / input fill */
+  --surface-700: #29364d; /* Clean border line */
+  --surface-600: #3b4d6b; /* Hover border line */
+  --surface-500: #6d809b; /* Muted text / icons */
+  --surface-400: #96a7be; /* Secondary text */
+  --surface-300: #cbd5e1; /* Body text */
+  --surface-200: #e2e8f0; /* Strong text */
+  --surface-100: #f8fafc; /* Headings */
+  --surface-50: #ffffff;
+
+  --glass-bg: rgba(18, 25, 39, 0.88);
+  --glass-border: rgba(41, 54, 77, 0.8);
+  --glass-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+
+  --glass-light-bg: rgba(26, 35, 54, 0.7);
+  --glass-light-border: rgba(41, 54, 77, 0.6);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--surface-950);
+  color: var(--surface-100);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-900);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-600);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-500);
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-light {
+  background: var(--glass-light-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-light-border);
+}
+
+
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-slide-in {
+  animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
