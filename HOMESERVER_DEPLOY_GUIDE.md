@@ -138,7 +138,7 @@ sudo nginx -t && sudo systemctl reload nginx
 - **Hostname:** `bogishamol.sds-max.uz`
 - **Service:** `HTTP` → `localhost:80`
 
-5. Backend `.env` dagi `CORS_ORIGIN` ga Vercel frontend'ning aniq production origin'ini yozing, masalan `https://<vercel-project>.vercel.app`, so'ng backendni qayta ishga tushiring.
+5. Backend `.env` dagi `CORS_ORIGIN` ga `https://bogishamol-ten.vercel.app` ni yozing (mahalliy frontend ham kerak bo'lsa vergul bilan `http://localhost:5173` ni qo'shing), so'ng backendni qayta ishga tushiring. `*` ishlatmang.
 6. Vercel frontend'ni `frontend` Root Directory bilan deploy qiling va Project Settings → Environment Variables'da Production uchun `VITE_API_URL=https://bogishamol.sds-max.uz/api` qo'shing, so'ng yangi deploy qiling.
 
 Cloudflare Tunnel TLS va DNS'ni boshqaradi; `4963` portni internetga ochish kerak emas. Agar serverda boshqa Nginx allaqachon `80` portni band qilgan bo'lsa, yuqoridagi `server` blokini o'sha Nginx konfiguratsiyasiga qo'shing, ikkinchi Nginx'ni ishga tushirmang.

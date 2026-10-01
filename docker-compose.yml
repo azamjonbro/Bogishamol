@@ -26,7 +26,7 @@ services:
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
       - ADMIN_FULLNAME=${ADMIN_FULLNAME:-Bog'ishamol Admin}
-      - CORS_ORIGIN=*
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://bogishamol-ten.vercel.app}
     depends_on:
       mongodb:
         condition: service_healthy
