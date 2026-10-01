@@ -15,10 +15,10 @@ const { notFoundHandler, errorHandler } = require('./middleware/errorMiddleware'
 
 function createApp() {
  const app = express();
- const allowedOrigins = (process.env.CORS_ORIGIN || '')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+ const allowedOrigins = [
+  'https://bogishamol-ten.vercel.app',
+  ...(process.env.CORS_ORIGIN || '').split(',').map((origin) => origin.trim()),
+ ].filter(Boolean);
 
  const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -29,7 +29,6 @@ function createApp() {
    origin(origin, callback) {
     if (
      !origin ||
-     allowedOrigins.length === 0 ||
      allowedOrigins.includes(origin) ||
      (isDevelopment && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))
     ) {
